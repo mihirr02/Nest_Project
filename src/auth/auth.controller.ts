@@ -1,5 +1,7 @@
-import { Controller, Post, Body } from '@nestjs/common'; // Remove Request import
-import { AuthService } from '../auth/auth.service';
+import { Controller, Post, Body, Res, HttpStatus } from '@nestjs/common';
+import { Response } from 'express'; // Import Response
+import { AuthService } from './auth.service';
+import * as cookie from 'cookie'; // Import the 'cookie' package
 
 @Controller('auth')
 export class AuthController {
@@ -12,8 +14,16 @@ export class AuthController {
   }
 
   @Post('signin')
-  async signIn(@Body('username') username: string, @Body('password') password: string) {
+  async signIn(
+    @Body('username') username: string,
+    @Body('password') password: string,
+    @Res() res: Response,
+  ) {
     const token = await this.authService.signIn(username, password);
-    return { accessToken: token.accessToken };
+
+    // Set the token in a cookie
+    res.cookie('accessToken', token.accessToken, { httpOnly: true });
+
+    return res.status(HttpStatus.OK).json({ accessToken: token.accessToken });
   }
 }
